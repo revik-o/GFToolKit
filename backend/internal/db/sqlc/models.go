@@ -86,12 +86,12 @@ type Promise struct {
 }
 
 type Setting struct {
-	ID        string
-	UserID    string
-	Theme     string
-	AvatarUrl string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID        string    `json:"id"`
+	UserID    string    `json:"user_id"`
+	Theme     string    `json:"theme"`
+	AvatarUrl string    `json:"avatar_url"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type SocialBattery struct {
@@ -115,10 +115,10 @@ type Task struct {
 }
 
 type User struct {
-	ID           string
-	Email        string
-	Username     string
-	PasswordHash string
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	ID           string    `json:"id"`
+	Email        string    `json:"email"`
+	Username     string    `json:"username"`
+	PasswordHash string    `json:"-"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
 }
