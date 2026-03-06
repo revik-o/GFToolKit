@@ -28,14 +28,14 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 const navItems = [
   { name: "Dashboard", path: "/", icon: LayoutDashboard },
-  { name: "Calendar", path: "/calendar", icon: CalendarDays },
-  { name: "Tasks", path: "/tasks", icon: CheckSquare },
-  { name: "Notes", path: "/notes", icon: StickyNote },
+  // { name: "Calendar", path: "/calendar", icon: CalendarDays },
+  // { name: "Tasks", path: "/tasks", icon: CheckSquare },
+  // { name: "Notes", path: "/notes", icon: StickyNote },
   { name: "Goals", path: "/goals", icon: Target },
   { name: "Promises", path: "/promises", icon: HeartHandshake },
   { name: "Social Battery", path: "/social-battery", icon: BatteryCharging },
-  { name: "Finances", path: "/finances", icon: Wallet },
-  { name: "Notifications", path: "/notifications", icon: Bell },
+  // { name: "Finances", path: "/finances", icon: Wallet },
+  // { name: "Notifications", path: "/notifications", icon: Bell },
   { name: "Settings", path: "/settings", icon: Settings },
 ];
 

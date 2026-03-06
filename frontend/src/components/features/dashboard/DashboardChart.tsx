@@ -32,7 +32,7 @@ export function DashboardChart({
   setTimeframe,
 }: DashboardChartProps) {
   return (
-    <Card className="bg-zinc-900 border-zinc-800 flex-1 min-h-[400px]">
+    <Card className="bg-zinc-900 border-zinc-800 flex-1 min-h-[250px]">
       <CardHeader>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
@@ -96,7 +96,7 @@ export function DashboardChart({
           </div>}
         </div>
       </CardHeader>
-      <CardContent className="h-[300px] w-full">
+      <CardContent className="h-full w-full">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={data}
