@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { fetchApi } from "@/lib/api";
 import { Plus, MoreVertical, Pencil, Trash2, Target } from "lucide-react";
@@ -66,31 +66,61 @@ export default function Goals() {
     "General",
   );
 
-  const loadGoals = useCallback(async () => {
-    const { data, error } = await fetchApi<BackendGoal[]>(
-      `/api/v1/goal/read?audience=${audience}`,
-    );
-    if (error) {
-      toast.error("Failed to load goals");
-      return;
-    }
-    if (data) {
-      setGoals(
-        data.map((g) => ({
-          id: g.id,
-          title: g.title,
-          description: g.description,
-          priority: g.priority,
-          target_audience: g.target_audience,
-          created_at: g.created_at,
-        })),
-      );
-    }
-  }, [audience]);
+  // Edit Form state
+  const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editTitle, setEditTitle] = useState("");
+  const [editDesc, setEditDesc] = useState("");
+  const [editPriority, setEditPriority] = useState<Goal["priority"]>("Medium");
+  const [editAudience, setEditAudience] = useState<"Him" | "Her" | "General">(
+    "General",
+  );
 
   useEffect(() => {
+    let isMounted = true;
+    const loadGoals = async () => {
+      const { data, error } = await fetchApi<BackendGoal[]>(
+        `/api/v1/goal/read?audience=${audience}`,
+      );
+      if (!isMounted) return;
+      if (error) {
+        toast.error("Failed to load goals");
+        return;
+      }
+      if (data) {
+        setGoals(
+          data.map((g) => ({
+            id: g.id,
+            title: g.title,
+            description: g.description,
+            priority: g.priority,
+            target_audience: g.target_audience,
+            created_at: g.created_at,
+          })),
+        );
+      }
+    };
     loadGoals();
-  }, [loadGoals]);
+    return () => { isMounted = false; };
+  }, [audience]);
+
+  // Expose a way to refresh goals easily
+  const refreshGoals = () => {
+    // A bit of a hack but we can just toggle a refresh state if we wanted to
+    // or redefine loadGoals without useCallback issues.
+    // For now we do a simple direct fetch since we only need to refresh list on create/update/delete.
+    fetchApi<BackendGoal[]>(`/api/v1/goal/read?audience=${audience}`).then(({ data }) => {
+      if (data) {
+        setGoals(
+          data.map((g) => ({
+            id: g.id, title: g.title, description: g.description, priority: g.priority, target_audience: g.target_audience, created_at: g.created_at,
+          }))
+        );
+      }
+    });
+  };
+
+
 
   const handleCreateGoal = async () => {
     if (!newTitle.trim() || !newDesc.trim()) {
@@ -117,7 +147,7 @@ export default function Goals() {
     setIsModalOpen(false);
     setNewTitle("");
     setNewDesc("");
-    loadGoals(); // Refresh list
+    refreshGoals(); // Refresh list
   };
 
   const handleDelete = async (id: string) => {
@@ -132,6 +162,44 @@ export default function Goals() {
 
     toast.success("Goal deleted");
     setGoals(goals.filter((g) => g.id !== id));
+  };
+
+  const handleEditOpen = (goal: Goal) => {
+    setEditingGoal(goal);
+    setEditTitle(goal.title);
+    setEditDesc(goal.description);
+    setEditPriority(goal.priority);
+    setEditAudience(goal.target_audience);
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdateGoal = async () => {
+    if (!editingGoal) return;
+    if (!editTitle.trim() || !editDesc.trim()) {
+      toast.error("Title and description are required");
+      return;
+    }
+
+    const { error } = await fetchApi("/api/v1/goal/update", {
+      method: "PUT",
+      body: JSON.stringify({
+        id: editingGoal.id,
+        title: editTitle,
+        description: editDesc,
+        priority: editPriority,
+        target_audience: editAudience,
+      }),
+    });
+
+    if (error) {
+      toast.error("Failed to update goal");
+      return;
+    }
+
+    toast.success("Goal updated");
+    setIsEditModalOpen(false);
+    setEditingGoal(null);
+    refreshGoals(); // Refresh list
   };
 
   return (
@@ -247,10 +315,72 @@ export default function Goals() {
               </div>
             </DialogContent>
           </Dialog>
+
+          {/* Edit Modal */}
+          <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+            <DialogContent className="bg-zinc-900 border-zinc-800 text-zinc-50 sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Edit Goal</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <Input
+                  placeholder="Goal Title"
+                  className="bg-zinc-800 border-zinc-700"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                />
+                <textarea
+                  className="flex min-h-[120px] w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm ring-offset-zinc-950 placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
+                  placeholder="Describe your goal..."
+                  value={editDesc}
+                  onChange={(e) => setEditDesc(e.target.value)}
+                />
+
+                <div className="grid grid-cols-2 gap-4">
+                  <Select
+                    value={editPriority}
+                    onValueChange={(v) => setEditPriority(v as Goal["priority"])}
+                  >
+                    <SelectTrigger className="bg-zinc-800 border-zinc-700">
+                      <SelectValue placeholder="Priority" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-zinc-800 border-zinc-700">
+                      <SelectItem value="Low">Low</SelectItem>
+                      <SelectItem value="Medium">Medium</SelectItem>
+                      <SelectItem value="High">High</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <Select
+                    value={editAudience}
+                    onValueChange={(v) =>
+                      setEditAudience(v as "Him" | "Her" | "General")
+                    }
+                  >
+                    <SelectTrigger className="bg-zinc-800 border-zinc-700">
+                      <SelectValue placeholder="Audience" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-zinc-800 border-zinc-700">
+                      <SelectItem value="Him">Him</SelectItem>
+                      <SelectItem value="Her">Her</SelectItem>
+                      <SelectItem value="General">General</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <Button
+                  onClick={handleUpdateGoal}
+                  className="bg-indigo-600 hover:bg-indigo-500 text-white w-full mt-2"
+                >
+                  Update Goal
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
-      <div className="space-y-4 pb-8 max-w-4xl">
+      <div className="space-y-4 pb-8">
         {goals.map((goal) => (
           <div
             key={goal.id}
@@ -258,19 +388,18 @@ export default function Goals() {
           >
             <div className="hidden sm:flex h-12 w-12 rounded-full bg-zinc-800/80 items-center justify-center shrink-0 border border-zinc-700/50">
               <Target
-                className={`h-6 w-6 ${
-                  goal.target_audience === "Him"
-                    ? "text-blue-400"
-                    : goal.target_audience === "Her"
-                      ? "text-pink-400"
-                      : "text-indigo-400"
-                }`}
+                className={`h-6 w-6 ${goal.target_audience === "Him"
+                  ? "text-blue-400"
+                  : goal.target_audience === "Her"
+                    ? "text-pink-400"
+                    : "text-indigo-400"
+                  }`}
               />
             </div>
 
             <div className="flex-1 min-w-0">
               <div className="flex justify-between items-start mb-1 gap-2">
-                <h3 className="font-semibold text-lg text-zinc-100 truncate">
+                <h3 className="font-semibold text-lg text-zinc-100 truncate" title={goal.title}>
                   {goal.title}
                 </h3>
                 <div className="sm:hidden">
@@ -288,7 +417,7 @@ export default function Goals() {
                       align="end"
                       className="bg-zinc-900 border-zinc-800 text-zinc-50 w-32"
                     >
-                      <DropdownMenuItem className="hover:bg-zinc-800 cursor-pointer">
+                      <DropdownMenuItem className="hover:bg-zinc-800 cursor-pointer" onClick={() => handleEditOpen(goal)}>
                         <Pencil size={14} className="mr-2" /> Edit
                       </DropdownMenuItem>
                       <DropdownMenuItem
@@ -302,7 +431,7 @@ export default function Goals() {
                 </div>
               </div>
 
-              <p className="text-zinc-400 text-sm line-clamp-2 sm:line-clamp-1 mb-3 sm:mb-2">
+              <p className="text-zinc-400 text-sm line-clamp-3 mb-3 sm:mb-2" title={goal.description}>
                 {goal.description}
               </p>
 
@@ -315,13 +444,12 @@ export default function Goals() {
                 </Badge>
 
                 <span
-                  className={`px-2 py-0.5 rounded-md ${
-                    goal.target_audience === "Him"
-                      ? "bg-blue-900/20 text-blue-400 border border-blue-900/30"
-                      : goal.target_audience === "Her"
-                        ? "bg-pink-900/20 text-pink-400 border border-pink-900/30"
-                        : "bg-zinc-800/50 text-zinc-300 border border-zinc-700/50"
-                  }`}
+                  className={`px-2 py-0.5 rounded-md ${goal.target_audience === "Him"
+                    ? "bg-blue-900/20 text-blue-400 border border-blue-900/30"
+                    : goal.target_audience === "Her"
+                      ? "bg-pink-900/20 text-pink-400 border border-pink-900/30"
+                      : "bg-zinc-800/50 text-zinc-300 border border-zinc-700/50"
+                    }`}
                 >
                   {goal.target_audience}
                 </span>
@@ -350,7 +478,7 @@ export default function Goals() {
                   align="end"
                   className="bg-zinc-900 border-zinc-800 text-zinc-50 w-32"
                 >
-                  <DropdownMenuItem className="hover:bg-zinc-800 focus:bg-zinc-800 cursor-pointer">
+                  <DropdownMenuItem className="hover:bg-zinc-800 focus:bg-zinc-800 cursor-pointer" onClick={() => handleEditOpen(goal)}>
                     <Pencil size={14} className="mr-2" /> Edit
                   </DropdownMenuItem>
                   <DropdownMenuItem

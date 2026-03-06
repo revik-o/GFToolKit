@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Particles, { initParticlesEngine } from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
 import type { Engine } from "@tsparticles/engine";
@@ -22,24 +22,23 @@ export function ParticleBackground({ batteryLevel }: ParticleBackgroundProps) {
     // can be used to perform some actions when particles are loaded
   };
 
-  // Determine particle color and animation speed based on battery level
-  const getParticleConfig = () => {
-    let color = "#ef4444"; // red-500 for low
+  const getParticleConfig = useCallback(() => {
+    let color = "#ef4444";
     let speed = 0.5;
     let quantity = 15;
 
     if (batteryLevel > 70) {
-      color = "#10b981"; // emerald-500
-      speed = 2;
+      color = "#ffffff";
+      speed = 1;
       quantity = 40;
     } else if (batteryLevel > 30) {
-      color = "#eab308"; // yellow-500
+      color = "#eab308";
       speed = 1;
       quantity = 25;
     }
 
     return { color, speed, quantity };
-  };
+  }, [batteryLevel]);
 
   const { color, speed, quantity } = getParticleConfig();
 
@@ -53,14 +52,14 @@ export function ParticleBackground({ batteryLevel }: ParticleBackgroundProps) {
       particlesLoaded={particlesLoaded}
       className="absolute inset-0 z-0 pointer-events-none mix-blend-screen opacity-40"
       options={{
-        fpsLimit: 60,
+        fpsLimit: 120,
         fullScreen: { enable: false, zIndex: 0 },
         particles: {
           color: {
             value: color,
           },
           move: {
-            direction: "top",
+            direction: "outside",
             enable: true,
             outModes: {
               default: "out",
@@ -81,8 +80,9 @@ export function ParticleBackground({ batteryLevel }: ParticleBackgroundProps) {
             value: { min: 0.1, max: 0.5 },
             animation: {
               enable: true,
-              speed: 1,
+              speed: 0.5,
               sync: false,
+              startValue: "max",
             },
           },
           shape: {

@@ -17,7 +17,6 @@ export default function Layout() {
       <Sidebar isCollapsed={isCollapsed} toggleCollapse={toggleCollapse} />
 
       <div className="flex-1 flex flex-col h-full overflow-hidden">
-        {/* Mobile Header */}
         <header className="lg:hidden flex h-16 items-center border-b border-zinc-900 px-4 bg-zinc-950/50 backdrop-blur-md">
           <MobileSidebar />
           <span className="ml-4 font-bold tracking-tight text-lg">
@@ -25,7 +24,6 @@ export default function Layout() {
           </span>
         </header>
 
-        {/* Main Content Area */}
         <main className="flex-1 overflow-y-auto w-full">
           <AnimatePresence mode="wait">
             <PageTransition key={location.pathname}>

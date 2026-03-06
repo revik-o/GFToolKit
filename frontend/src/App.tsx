@@ -12,6 +12,8 @@ import SocialBattery from "./pages/Battery";
 import Finances from "./pages/Finances";
 import Notifications from "./pages/Notifications";
 import Settings from "./pages/Settings";
+import InvitePartner from "./pages/InvitePartner";
+import AcceptPartner from "./pages/AcceptPartner";
 import Layout from "./components/layout/Layout";
 import { ProtectedRoute } from "./components/layout/ProtectedRoute";
 
@@ -22,8 +24,10 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/partner/accept" element={<AcceptPartner />} />
 
           <Route element={<ProtectedRoute />}>
+            <Route path="/invite-partner" element={<InvitePartner />} />
             <Route element={<Layout />}>
               <Route path="/" element={<Dashboard />} />
               <Route path="/calendar" element={<Calendar />} />
@@ -35,7 +39,6 @@ function App() {
               <Route path="/finances" element={<Finances />} />
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/settings" element={<Settings />} />
-              {/* Future routes will go here */}
             </Route>
           </Route>
         </Routes>

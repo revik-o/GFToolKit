@@ -54,11 +54,11 @@ export default function SocialBattery() {
   };
 
   // Determine battery color based on level
-  const getBatteryColor = (level: number) => {
-    if (level > 70) return "bg-emerald-500";
+  const getBatteryColor = useCallback((level: number) => {
+    if (level > 70) return "bg-white";
     if (level > 30) return "bg-yellow-500";
     return "bg-red-500";
-  };
+  }, []);
 
   // Determine which icon represents the state
   const getBatteryIcon = (level: number) => {
@@ -112,8 +112,7 @@ export default function SocialBattery() {
       </div>
 
       <div className="flex flex-col lg:flex-row gap-10 items-center justify-center flex-1 max-w-5xl mx-auto w-full">
-        {/* Dynamic Battery Graphic */}
-        <div className="flex-1 w-full max-w-md flex flex-col items-center justify-center p-8 bg-zinc-900/40 rounded-3xl border border-zinc-800 relative overflow-hidden">
+        <div className="flex-1 w-full max-w-md flex flex-col items-center justify-center p-8 relative overflow-hidden">
           <ParticleBackground batteryLevel={batteryLevel} />
 
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -121,10 +120,8 @@ export default function SocialBattery() {
           </div>
 
           <div className="relative z-10 w-48 h-80 rounded-[2rem] border-8 border-zinc-800 bg-zinc-950 p-2 flex flex-col justify-end shadow-2xl relative overflow-hidden">
-            {/* Battery Top Bump */}
             <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-16 h-4 bg-zinc-800 rounded-t-lg"></div>
 
-            {/* Liquid Fill */}
             <div
               className={`w-full rounded-[1.25rem] transition-all duration-1000 ease-[cubic-bezier(0.25,1,0.5,1)] flex items-center justify-center relative shadow-[inset_0_0_20px_rgba(0,0,0,0.5)] ${getBatteryColor(batteryLevel)}`}
               style={{ height: `${batteryLevel}%` }}
@@ -132,7 +129,7 @@ export default function SocialBattery() {
               {batteryLevel === 100 && (
                 <Zap
                   size={48}
-                  className="text-emerald-950 opacity-40 animate-pulse absolute"
+                  className="text-emerald-950 opacity-20 absolute"
                 />
               )}
             </div>
@@ -155,7 +152,6 @@ export default function SocialBattery() {
           </p>
         </div>
 
-        {/* Action Controls */}
         <div className="flex-1 w-full max-w-md flex flex-col gap-3">
           <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-500 mb-2">
             Update Level

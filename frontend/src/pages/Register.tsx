@@ -74,7 +74,12 @@ export default function Register() {
         return;
       }
 
-      toast.success("Account created successfully! Please log in.");
+      const partnerToken = localStorage.getItem("partnerToken");
+      if (partnerToken) {
+        toast.success("Account created successfully! Please log in to connect with your partner.");
+      } else {
+        toast.success("Account created successfully! Please log in.");
+      }
       navigate("/login");
     } catch {
       toast.error("Registration failed. Please try again.");

@@ -16,20 +16,37 @@ import (
 
 func main() {
 	err := godotenv.Load()
+
 	if err != nil {
 		log.Println("No .env file found, using default environment variables")
 	}
 
 	port := os.Getenv("PORT")
+
 	if port == "" {
 		port = "8080"
 		log.Println("PORT not set, defaulting to 8080")
 	}
 
+	smtpHost := os.Getenv("SMTP_HOST")
+	smtpPort := os.Getenv("SMTP_PORT")
+	smtpUser := os.Getenv("SMTP_USER")
+	smtpPass := os.Getenv("SMTP_PASS")
+
+	if smtpHost == "" || smtpPort == "" || smtpUser == "" || smtpPass == "" {
+		log.Fatal("SMTP_HOST, SMTP_PORT, SMTP_USER, or SMTP_PASS environment variables are not set. They are required for partner invitations.")
+	}
+
+	if os.Getenv("BASE_URL") == "" {
+		log.Fatal("BASE_URL environment variable is not set")
+	}
+
 	db, err := sql.Open("sqlite3", "./gftoolkit.db")
+
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
+
 	defer db.Close()
 
 	if err := db.Ping(); err != nil {
@@ -42,11 +59,9 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	// Setup our custom API server logic
 	server := api.NewServer(db)
 	server.SetupRoutes(mux)
 
-	// Health route
 	mux.HandleFunc("/api/v1/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
@@ -56,6 +71,7 @@ func main() {
 	loggedMux := loggingMiddleware(mux)
 
 	log.Printf("Server is starting on port %s...", port)
+
 	if err := http.ListenAndServe(fmt.Sprintf(":%s", port), loggedMux); err != nil {
 		log.Fatalf("Server failed to start: %v", err)
 	}

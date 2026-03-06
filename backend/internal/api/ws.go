@@ -14,11 +14,9 @@ import (
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
-	// Allow all origins for dev simplicity
-	CheckOrigin: func(r *http.Request) bool { return true },
+	CheckOrigin:     func(r *http.Request) bool { return true },
 }
 
-// Notification represents a message sent over WS
 type Notification struct {
 	ID        string `json:"id"`
 	Title     string `json:"title"`
@@ -27,14 +25,12 @@ type Notification struct {
 	Timestamp string `json:"timestamp"`
 }
 
-// Client represents a connected user
 type Client struct {
 	hub  *Hub
 	conn *websocket.Conn
 	send chan []byte
 }
 
-// Hub maintains the set of active clients and broadcasts messages to them.
 type Hub struct {
 	clients    map[*Client]bool
 	broadcast  chan []byte
@@ -75,7 +71,6 @@ func (h *Hub) Run() {
 	}
 }
 
-// BroadcastNotification allows other API handlers to push notifications
 func (h *Hub) BroadcastNotification(title, message, notifType string) {
 	notif := Notification{
 		ID:        uuid.New().String(),
@@ -92,7 +87,6 @@ func (h *Hub) BroadcastNotification(title, message, notifType string) {
 	h.broadcast <- data
 }
 
-// Read pumps messages from the websocket connection to the hub.
 func (c *Client) readPump() {
 	defer func() {
 		c.hub.unregister <- c

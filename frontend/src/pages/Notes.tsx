@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { fetchApi } from "@/lib/api";
 import { Plus, MoreVertical, Pencil, Trash2 } from "lucide-react";
@@ -42,6 +42,12 @@ export type BackendNote = {
   updated_at: string;
 };
 
+const getAudienceColor = (audience: "Him" | "Her" | "General") => {
+  if (audience === "Him") return "bg-blue-900/30 text-blue-400";
+  if (audience === "Her") return "bg-pink-900/30 text-pink-400";
+  return "bg-zinc-800 text-zinc-300";
+};
+
 export default function Notes() {
   const [audience, setAudience] = useState<"Him" | "Her" | "General">(
     "General",
@@ -56,30 +62,51 @@ export default function Notes() {
     "General",
   );
 
-  const loadNotes = useCallback(async () => {
-    const { data, error } = await fetchApi<BackendNote[]>(
-      `/api/v1/note/read?audience=${audience}`,
-    );
-    if (error) {
-      toast.error("Failed to load notes");
-      return;
-    }
-    if (data) {
-      setNotes(
-        data.map((n) => ({
-          id: n.id,
-          title: n.title,
-          description: n.description,
-          target_audience: n.target_audience,
-          created_at: n.created_at,
-        })),
-      );
-    }
-  }, [audience]);
+  // Edit Form state
+  const [editingNote, setEditingNote] = useState<Note | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editTitle, setEditTitle] = useState("");
+  const [editDesc, setEditDesc] = useState("");
+  const [editAudience, setEditAudience] = useState<"Him" | "Her" | "General">("General");
 
   useEffect(() => {
+    let isMounted = true;
+    const loadNotes = async () => {
+      const { data, error } = await fetchApi<BackendNote[]>(
+        `/api/v1/note/read?audience=${audience}`,
+      );
+      if (!isMounted) return;
+      if (error) {
+        toast.error("Failed to load notes");
+        return;
+      }
+      if (data) {
+        setNotes(
+          data.map((n) => ({
+            id: n.id,
+            title: n.title,
+            description: n.description,
+            target_audience: n.target_audience,
+            created_at: n.created_at,
+          })),
+        );
+      }
+    };
     loadNotes();
-  }, [loadNotes]);
+    return () => { isMounted = false; };
+  }, [audience]);
+
+  const refreshNotes = () => {
+    fetchApi<BackendNote[]>(`/api/v1/note/read?audience=${audience}`).then(({ data }) => {
+      if (data) {
+        setNotes(
+          data.map((n) => ({
+            id: n.id, title: n.title, description: n.description, target_audience: n.target_audience, created_at: n.created_at,
+          }))
+        );
+      }
+    });
+  };
 
   const handleCreateNote = async () => {
     if (!newTitle.trim() || !newDesc.trim()) {
@@ -105,7 +132,7 @@ export default function Notes() {
     setIsModalOpen(false);
     setNewTitle("");
     setNewDesc("");
-    loadNotes(); // Refresh list
+    refreshNotes(); // Refresh list
   };
 
   const handleDelete = async (id: string) => {
@@ -120,6 +147,42 @@ export default function Notes() {
 
     toast.success("Note deleted");
     setNotes(notes.filter((n) => n.id !== id));
+  };
+
+  const handleEditOpen = (note: Note) => {
+    setEditingNote(note);
+    setEditTitle(note.title);
+    setEditDesc(note.description);
+    setEditAudience(note.target_audience);
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdateNote = async () => {
+    if (!editingNote) return;
+    if (!editTitle.trim() || !editDesc.trim()) {
+      toast.error("Title and description are required");
+      return;
+    }
+
+    const { error } = await fetchApi("/api/v1/note/update", {
+      method: "PUT",
+      body: JSON.stringify({
+        id: editingNote.id,
+        title: editTitle,
+        description: editDesc,
+        target_audience: editAudience,
+      }),
+    });
+
+    if (error) {
+      toast.error("Failed to update note");
+      return;
+    }
+
+    toast.success("Note updated");
+    setIsEditModalOpen(false);
+    setEditingNote(null);
+    refreshNotes(); // Refresh list
   };
 
   return (
@@ -218,6 +281,51 @@ export default function Notes() {
               </div>
             </DialogContent>
           </Dialog>
+
+          {/* Edit Modal */}
+          <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+            <DialogContent className="bg-zinc-900 border-zinc-800 text-zinc-50 sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Edit Note</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <Input
+                  placeholder="Note Title"
+                  className="bg-zinc-800 border-zinc-700"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                />
+                <textarea
+                  className="flex min-h-[120px] w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm ring-offset-zinc-950 placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
+                  placeholder="Write your note description here..."
+                  value={editDesc}
+                  onChange={(e) => setEditDesc(e.target.value)}
+                />
+                <Select
+                  value={editAudience}
+                  onValueChange={(v) =>
+                    setEditAudience(v as "Him" | "Her" | "General")
+                  }
+                >
+                  <SelectTrigger className="bg-zinc-800 border-zinc-700">
+                    <SelectValue placeholder="Audience" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-zinc-800 border-zinc-700">
+                    <SelectItem value="Him">Him</SelectItem>
+                    <SelectItem value="Her">Her</SelectItem>
+                    <SelectItem value="General">General</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Button
+                  onClick={handleUpdateNote}
+                  className="bg-indigo-600 hover:bg-indigo-500 text-white w-full mt-2"
+                >
+                  Update Note
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
@@ -246,7 +354,7 @@ export default function Notes() {
                   align="end"
                   className="bg-zinc-900 border-zinc-800 text-zinc-50 w-32"
                 >
-                  <DropdownMenuItem className="hover:bg-zinc-800 focus:bg-zinc-800 cursor-pointer">
+                  <DropdownMenuItem className="hover:bg-zinc-800 focus:bg-zinc-800 cursor-pointer" onClick={() => handleEditOpen(note)}>
                     <Pencil size={14} className="mr-2" /> Edit
                   </DropdownMenuItem>
                   <DropdownMenuItem
@@ -263,13 +371,7 @@ export default function Notes() {
             </p>
             <div className="mt-4 pt-4 border-t border-zinc-800/50 flex justify-between items-center text-xs font-medium">
               <span
-                className={`px-2 py-1 rounded-md ${
-                  note.target_audience === "Him"
-                    ? "bg-blue-900/30 text-blue-400"
-                    : note.target_audience === "Her"
-                      ? "bg-pink-900/30 text-pink-400"
-                      : "bg-zinc-800 text-zinc-300"
-                }`}
+                className={`px-2 py-1 rounded-md ${getAudienceColor(note.target_audience)}`}
               >
                 {note.target_audience}
               </span>

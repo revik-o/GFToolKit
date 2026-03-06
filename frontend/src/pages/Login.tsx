@@ -61,6 +61,26 @@ export default function Login() {
       toast.success("Login successful!");
       if (res.data?.token) {
         Cookies.set("token", res.data.token, { expires: 3 });
+
+        // Check for pending partner invitation
+        const partnerToken = localStorage.getItem("partnerToken");
+        if (partnerToken) {
+          try {
+            const acceptRes = await fetchApi("/api/v1/partner/accept", {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${res.data.token}`,
+              },
+              body: JSON.stringify({ token: partnerToken }),
+            });
+            if (!acceptRes.error) {
+              localStorage.removeItem("partnerToken");
+              toast.success("Partner invitation accepted!");
+            }
+          } catch (e) {
+            console.error("Failed to accept partner invitation", e);
+          }
+        }
       }
       navigate("/");
     } catch {
@@ -125,7 +145,8 @@ export default function Login() {
               >
                 Log In
               </Button>
-              <Button
+              {/* eslint-disable-next-line no-constant-binary-expression */}
+              {false && <Button
                 type="button"
                 variant="outline"
                 className="w-full border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white"
@@ -133,6 +154,7 @@ export default function Login() {
               >
                 Login with Google (Not working now)
               </Button>
+              }
             </form>
           </Form>
           <div className="mt-4 text-center text-sm">

@@ -58,7 +58,6 @@ func (s *Server) handleSocialBatteryRead(w http.ResponseWriter, r *http.Request)
 	battery, err := s.Queries.GetSocialBattery(r.Context(), audience)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			// Return a default 100% battery if none exists yet
 			RespondWithJSON(w, http.StatusOK, map[string]interface{}{
 				"level":           100,
 				"target_audience": audience,

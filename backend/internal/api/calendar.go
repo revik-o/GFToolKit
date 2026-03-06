@@ -13,7 +13,6 @@ import (
 	db "github.com/revik-o/GFToolKit-backend/internal/db/sqlc"
 )
 
-// Helper to get user ID from token
 func getUserIDFromRequest(r *http.Request) string {
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
