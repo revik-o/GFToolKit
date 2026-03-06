@@ -1,3 +1,4 @@
+/* eslint-disable no-constant-binary-expression */
 import { Activity } from "lucide-react";
 import {
   BarChart,
@@ -36,15 +37,15 @@ export function DashboardChart({
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <CardTitle className="text-xl text-zinc-100 flex items-center gap-2">
-              <Activity className="h-5 w-5 text-indigo-400" /> Completion
-              Activity
+              <Activity className="h-5 w-5 text-indigo-400" />
+              Completion Activity
             </CardTitle>
             <CardDescription className="text-zinc-400">
               Tracks accomplished tasks, goals, and promises over time.
             </CardDescription>
           </div>
-          <div className="flex bg-zinc-950 border border-zinc-800 rounded-md p-1">
-            <Button
+          {false && <div className="flex bg-zinc-950 border border-zinc-800 rounded-md p-1">
+            {false && <Button
               variant="ghost"
               size="sm"
               onClick={() => setTimeframe("day")}
@@ -55,8 +56,8 @@ export function DashboardChart({
               }
             >
               Day
-            </Button>
-            <Button
+            </Button>}
+            {false && <Button
               variant="ghost"
               size="sm"
               onClick={() => setTimeframe("week")}
@@ -67,8 +68,8 @@ export function DashboardChart({
               }
             >
               Week
-            </Button>
-            <Button
+            </Button>}
+            {false && <Button
               variant="ghost"
               size="sm"
               onClick={() => setTimeframe("month")}
@@ -79,8 +80,8 @@ export function DashboardChart({
               }
             >
               Month
-            </Button>
-            <Button
+            </Button>}
+            {false && <Button
               variant="ghost"
               size="sm"
               onClick={() => setTimeframe("year")}
@@ -91,8 +92,8 @@ export function DashboardChart({
               }
             >
               Year
-            </Button>
-          </div>
+            </Button>}
+          </div>}
         </div>
       </CardHeader>
       <CardContent className="h-[300px] w-full">
@@ -130,7 +131,7 @@ export function DashboardChart({
               cursor={{ fill: "#27272a", opacity: 0.4 }}
             />
             <Legend wrapperStyle={{ paddingTop: "20px" }} />
-            <Bar dataKey="Tasks" fill="#818cf8" radius={[4, 4, 0, 0]} />
+            {false && <Bar dataKey="Tasks" fill="#818cf8" radius={[4, 4, 0, 0]} />}
             <Bar dataKey="Goals" fill="#60a5fa" radius={[4, 4, 0, 0]} />
             <Bar dataKey="Promises" fill="#f472b6" radius={[4, 4, 0, 0]} />
           </BarChart>

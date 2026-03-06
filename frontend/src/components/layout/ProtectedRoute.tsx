@@ -38,9 +38,9 @@ export function ProtectedRoute() {
     );
   }
 
-  if (partnerStatus === "disconnected" && location.pathname !== "/invite-partner") {
-    return <Navigate to="/invite-partner" replace />;
-  }
+  // if (partnerStatus === "disconnected" && location.pathname !== "/invite-partner") {
+  //   return <Navigate to="/invite-partner" replace />;
+  // }
 
   if (partnerStatus === "connected" && location.pathname === "/invite-partner") {
     return <Navigate to="/" replace />;

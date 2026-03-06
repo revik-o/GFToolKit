@@ -1,93 +1,32 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { fetchApi } from "@/lib/api";
-import {
-  Plus,
-  MoreVertical,
-  Pencil,
-  Trash2,
-  HeartHandshake,
-} from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
-type PromiseItem = {
-  id: string;
-  title: string;
-  description: string;
-  priority: "Low" | "Medium" | "High";
-  target_audience: "Him" | "Her" | "General";
-  created_at: string;
-};
-
-export type BackendPromise = {
-  id: string;
-  title: string;
-  description: string;
-  priority: "Low" | "Medium" | "High";
-  target_audience: "Him" | "Her" | "General";
-  created_at: string;
-  updated_at: string;
-};
-
-const priorityColors = {
-  Low: "bg-zinc-800 text-zinc-300 border-zinc-700",
-  Medium: "bg-yellow-900/50 text-yellow-500 border-yellow-900",
-  High: "bg-red-900/50 text-red-500 border-red-900",
-};
+import type {
+  PromiseItem,
+  BackendPromise,
+} from "@/components/features/promises/types";
+import PromiseCreateModal from "@/components/features/promises/PromiseCreateModal";
+import PromiseEditModal from "@/components/features/promises/PromiseEditModal";
+import PromiseCard from "@/components/features/promises/PromiseCard";
 
 export default function Promises() {
   const [audience, setAudience] = useState<"Him" | "Her" | "General">(
-    "General",
+    "General"
   );
   const [promises, setPromises] = useState<PromiseItem[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Form state
-  const [newTitle, setNewTitle] = useState("");
-  const [newDesc, setNewDesc] = useState("");
-  const [newPriority, setNewPriority] =
-    useState<PromiseItem["priority"]>("Medium");
-  const [newAudience, setNewAudience] = useState<"Him" | "Her" | "General">(
-    "General",
-  );
-
-  // Edit Form state
   const [editingPromise, setEditingPromise] = useState<PromiseItem | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editTitle, setEditTitle] = useState("");
-  const [editDesc, setEditDesc] = useState("");
-  const [editPriority, setEditPriority] = useState<PromiseItem["priority"]>("Medium");
-  const [editAudience, setEditAudience] = useState<"Him" | "Her" | "General">(
-    "General",
-  );
 
   useEffect(() => {
     let isMounted = true;
     const loadPromises = async () => {
       const { data, error } = await fetchApi<BackendPromise[]>(
-        `/api/v1/promise/read?audience=${audience}`,
+        `/api/v1/promise/read?audience=${audience}`
       );
       if (!isMounted) return;
       if (error) {
@@ -103,55 +42,33 @@ export default function Promises() {
             priority: p.priority,
             target_audience: p.target_audience,
             created_at: p.created_at,
-          })),
+          }))
         );
       }
     };
     loadPromises();
-    return () => { isMounted = false; };
+    return () => {
+      isMounted = false;
+    };
   }, [audience]);
 
-  // Expose a way to refresh promises easily
   const refreshPromises = () => {
-    fetchApi<BackendPromise[]>(`/api/v1/promise/read?audience=${audience}`).then(({ data }) => {
-      if (data) {
-        setPromises(
-          data.map((p) => ({
-            id: p.id, title: p.title, description: p.description, priority: p.priority, target_audience: p.target_audience, created_at: p.created_at,
-          }))
-        );
+    fetchApi<BackendPromise[]>(`/api/v1/promise/read?audience=${audience}`).then(
+      ({ data }) => {
+        if (data) {
+          setPromises(
+            data.map((p) => ({
+              id: p.id,
+              title: p.title,
+              description: p.description,
+              priority: p.priority,
+              target_audience: p.target_audience,
+              created_at: p.created_at,
+            }))
+          );
+        }
       }
-    });
-  };
-
-
-
-  const handleCreatePromise = async () => {
-    if (!newTitle.trim() || !newDesc.trim()) {
-      toast.error("Title and description are required");
-      return;
-    }
-
-    const { error } = await fetchApi("/api/v1/promise/create", {
-      method: "POST",
-      body: JSON.stringify({
-        title: newTitle,
-        description: newDesc,
-        priority: newPriority,
-        target_audience: newAudience,
-      }),
-    });
-
-    if (error) {
-      toast.error("Failed to create promise");
-      return;
-    }
-
-    toast.success("Promise created");
-    setIsModalOpen(false);
-    setNewTitle("");
-    setNewDesc("");
-    refreshPromises(); // Refresh list
+    );
   };
 
   const handleDelete = async (id: string) => {
@@ -170,40 +87,7 @@ export default function Promises() {
 
   const handleEditOpen = (promise: PromiseItem) => {
     setEditingPromise(promise);
-    setEditTitle(promise.title);
-    setEditDesc(promise.description);
-    setEditPriority(promise.priority);
-    setEditAudience(promise.target_audience);
     setIsEditModalOpen(true);
-  };
-
-  const handleUpdatePromise = async () => {
-    if (!editingPromise) return;
-    if (!editTitle.trim() || !editDesc.trim()) {
-      toast.error("Title and description are required");
-      return;
-    }
-
-    const { error } = await fetchApi("/api/v1/promise/update", {
-      method: "PUT",
-      body: JSON.stringify({
-        id: editingPromise.id,
-        title: editTitle,
-        description: editDesc,
-        priority: editPriority,
-        target_audience: editAudience,
-      }),
-    });
-
-    if (error) {
-      toast.error("Failed to update promise");
-      return;
-    }
-
-    toast.success("Promise updated");
-    setIsEditModalOpen(false);
-    setEditingPromise(null);
-    refreshPromises(); // Refresh list
   };
 
   return (
@@ -246,257 +130,48 @@ export default function Promises() {
               variant="ghost"
               size="sm"
               onClick={() => setAudience("General")}
-              className={
-                audience === "General" ? "bg-zinc-800" : "text-zinc-400"
-              }
+              className={audience === "General" ? "bg-zinc-800" : "text-zinc-400"}
             >
               General
             </Button>
           </div>
 
-          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-indigo-600 hover:bg-indigo-500 text-white">
-                <Plus size={16} className="mr-2" /> Create Promise
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="bg-zinc-900 border-zinc-800 text-zinc-50 sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>Make a Promise</DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <Input
-                  placeholder="Promise Title"
-                  className="bg-zinc-800 border-zinc-700"
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                />
-                <textarea
-                  className="flex min-h-[120px] w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm ring-offset-zinc-950 placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
-                  placeholder="Describe your promise..."
-                  value={newDesc}
-                  onChange={(e) => setNewDesc(e.target.value)}
-                />
+          <Button
+            onClick={() => setIsModalOpen(true)}
+            className="bg-indigo-600 hover:bg-indigo-500 text-white"
+          >
+            <Plus size={16} className="mr-2" /> Create Promise
+          </Button>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <Select
-                    value={newPriority}
-                    onValueChange={(v) =>
-                      setNewPriority(v as PromiseItem["priority"])
-                    }
-                  >
-                    <SelectTrigger className="bg-zinc-800 border-zinc-700">
-                      <SelectValue placeholder="Priority" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-zinc-800 border-zinc-700">
-                      <SelectItem value="Low">Low</SelectItem>
-                      <SelectItem value="Medium">Medium</SelectItem>
-                      <SelectItem value="High">High</SelectItem>
-                    </SelectContent>
-                  </Select>
+          <PromiseCreateModal
+            isOpen={isModalOpen}
+            onOpenChange={setIsModalOpen}
+            onSuccess={() => {
+              setIsModalOpen(false);
+              refreshPromises();
+            }}
+          />
 
-                  <Select
-                    value={newAudience}
-                    onValueChange={(v) =>
-                      setNewAudience(v as "Him" | "Her" | "General")
-                    }
-                  >
-                    <SelectTrigger className="bg-zinc-800 border-zinc-700">
-                      <SelectValue placeholder="Audience" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-zinc-800 border-zinc-700">
-                      <SelectItem value="Him">Him</SelectItem>
-                      <SelectItem value="Her">Her</SelectItem>
-                      <SelectItem value="General">General</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <Button
-                  onClick={handleCreatePromise}
-                  className="bg-indigo-600 hover:bg-indigo-500 text-white w-full mt-2"
-                >
-                  Commit Promise
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-
-          {/* Edit Modal */}
-          <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-            <DialogContent className="bg-zinc-900 border-zinc-800 text-zinc-50 sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>Edit Promise</DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <Input
-                  placeholder="Promise Title"
-                  className="bg-zinc-800 border-zinc-700"
-                  value={editTitle}
-                  onChange={(e) => setEditTitle(e.target.value)}
-                />
-                <textarea
-                  className="flex min-h-[120px] w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm ring-offset-zinc-950 placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
-                  placeholder="Describe your promise..."
-                  value={editDesc}
-                  onChange={(e) => setEditDesc(e.target.value)}
-                />
-
-                <div className="grid grid-cols-2 gap-4">
-                  <Select
-                    value={editPriority}
-                    onValueChange={(v) => setEditPriority(v as PromiseItem["priority"])}
-                  >
-                    <SelectTrigger className="bg-zinc-800 border-zinc-700">
-                      <SelectValue placeholder="Priority" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-zinc-800 border-zinc-700">
-                      <SelectItem value="Low">Low</SelectItem>
-                      <SelectItem value="Medium">Medium</SelectItem>
-                      <SelectItem value="High">High</SelectItem>
-                    </SelectContent>
-                  </Select>
-
-                  <Select
-                    value={editAudience}
-                    onValueChange={(v) =>
-                      setEditAudience(v as "Him" | "Her" | "General")
-                    }
-                  >
-                    <SelectTrigger className="bg-zinc-800 border-zinc-700">
-                      <SelectValue placeholder="Audience" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-zinc-800 border-zinc-700">
-                      <SelectItem value="Him">Him</SelectItem>
-                      <SelectItem value="Her">Her</SelectItem>
-                      <SelectItem value="General">General</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <Button
-                  onClick={handleUpdatePromise}
-                  className="bg-indigo-600 hover:bg-indigo-500 text-white w-full mt-2"
-                >
-                  Update Promise
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+          <PromiseEditModal
+            isOpen={isEditModalOpen}
+            onOpenChange={setIsEditModalOpen}
+            promise={editingPromise}
+            onSuccess={() => {
+              setIsEditModalOpen(false);
+              refreshPromises();
+            }}
+          />
         </div>
       </div>
 
       <div className="space-y-4 pb-8">
         {promises.map((promise) => (
-          <div
+          <PromiseCard
             key={promise.id}
-            className="group bg-zinc-900/40 border border-zinc-800/60 rounded-xl p-5 hover:bg-zinc-900 hover:border-zinc-700 transition-all flex flex-col sm:flex-row gap-4 sm:items-center"
-          >
-            <div className="hidden sm:flex h-12 w-12 rounded-full bg-zinc-800/80 items-center justify-center shrink-0 border border-zinc-700/50">
-              <HeartHandshake
-                className={`h-6 w-6 ${promise.target_audience === "Him"
-                  ? "text-blue-400"
-                  : promise.target_audience === "Her"
-                    ? "text-pink-400"
-                    : "text-indigo-400"
-                  }`}
-              />
-            </div>
-
-            <div className="flex-1 min-w-0">
-              <div className="flex justify-between items-start mb-1 gap-2">
-                <h3 className="font-semibold text-lg text-zinc-100 truncate" title={promise.title}>
-                  {promise.title}
-                </h3>
-                <div className="sm:hidden">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 -mr-2 -mt-1 text-zinc-400"
-                      >
-                        <MoreVertical size={18} />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                      align="end"
-                      className="bg-zinc-900 border-zinc-800 text-zinc-50 w-32"
-                    >
-                      <DropdownMenuItem className="hover:bg-zinc-800 cursor-pointer" onClick={() => handleEditOpen(promise)}>
-                        <Pencil size={14} className="mr-2" /> Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="text-red-400 hover:text-red-300 hover:bg-red-900/50 cursor-pointer"
-                        onClick={() => handleDelete(promise.id)}
-                      >
-                        <Trash2 size={14} className="mr-2" /> Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </div>
-
-              <p className="text-zinc-400 text-sm line-clamp-3 mb-3 sm:mb-2" title={promise.description}>
-                {promise.description}
-              </p>
-
-              <div className="flex flex-wrap items-center gap-3 text-xs font-medium">
-                <Badge
-                  variant="outline"
-                  className={`${priorityColors[promise.priority]} bg-transparent`}
-                >
-                  {promise.priority} Priority
-                </Badge>
-
-                <span
-                  className={`px-2 py-0.5 rounded-md ${promise.target_audience === "Him"
-                    ? "bg-blue-900/20 text-blue-400 border border-blue-900/30"
-                    : promise.target_audience === "Her"
-                      ? "bg-pink-900/20 text-pink-400 border border-pink-900/30"
-                      : "bg-zinc-800/50 text-zinc-300 border border-zinc-700/50"
-                    }`}
-                >
-                  {promise.target_audience}
-                </span>
-                <span className="text-zinc-600 ml-auto sm:ml-0">
-                  {new Date(promise.created_at).toLocaleDateString(undefined, {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                  })}
-                </span>
-              </div>
-            </div>
-
-            <div className="hidden sm:flex shrink-0">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <MoreVertical size={18} />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="end"
-                  className="bg-zinc-900 border-zinc-800 text-zinc-50 w-32"
-                >
-                  <DropdownMenuItem className="hover:bg-zinc-800 focus:bg-zinc-800 cursor-pointer" onClick={() => handleEditOpen(promise)}>
-                    <Pencil size={14} className="mr-2" /> Edit
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="hover:bg-red-900/50 focus:bg-red-900/50 text-red-400 hover:text-red-300 cursor-pointer"
-                    onClick={() => handleDelete(promise.id)}
-                  >
-                    <Trash2 size={14} className="mr-2" /> Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
+            promise={promise}
+            onEdit={handleEditOpen}
+            onDelete={handleDelete}
+          />
         ))}
 
         {promises.length === 0 && (

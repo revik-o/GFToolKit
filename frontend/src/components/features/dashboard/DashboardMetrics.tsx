@@ -1,3 +1,4 @@
+/* eslint-disable no-constant-binary-expression */
 import {
   CheckSquare,
   Target,
@@ -15,8 +16,8 @@ interface DashboardMetricsProps {
 
 export function DashboardMetrics({ metrics }: DashboardMetricsProps) {
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 mb-8">
-      <Card className="bg-zinc-900 border-zinc-800 text-zinc-50 hover:bg-zinc-800/80 transition-colors">
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mb-8 ">
+      {false && <Card className="bg-zinc-900 border-zinc-800 text-zinc-50 hover:bg-zinc-800/80 transition-colors">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-sm font-medium text-zinc-400">
             Active Tasks
@@ -29,7 +30,7 @@ export function DashboardMetrics({ metrics }: DashboardMetricsProps) {
           </div>
           <p className="text-xs text-zinc-500 mt-1">To Do / In Progress</p>
         </CardContent>
-      </Card>
+      </Card>}
 
       <Card className="bg-zinc-900 border-zinc-800 text-zinc-50 hover:bg-zinc-800/80 transition-colors">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -61,7 +62,7 @@ export function DashboardMetrics({ metrics }: DashboardMetricsProps) {
         </CardContent>
       </Card>
 
-      <Card className="bg-zinc-900 border-zinc-800 text-zinc-50 hover:bg-zinc-800/80 transition-colors">
+      {false && <Card className="bg-zinc-900 border-zinc-800 text-zinc-50 hover:bg-zinc-800/80 transition-colors">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-sm font-medium text-zinc-400">
             Expenses
@@ -74,7 +75,7 @@ export function DashboardMetrics({ metrics }: DashboardMetricsProps) {
           </div>
           <p className="text-xs text-zinc-500 mt-1">Total spended</p>
         </CardContent>
-      </Card>
+      </Card>}
 
       <Card className="bg-zinc-900 border-zinc-800 text-zinc-50 hover:bg-zinc-800/80 transition-colors">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -93,7 +94,7 @@ export function DashboardMetrics({ metrics }: DashboardMetricsProps) {
         </CardContent>
       </Card>
 
-      <Card className="bg-zinc-900 border-zinc-800 text-zinc-50 hover:bg-zinc-800/80 transition-colors">
+      {false && <Card className="bg-zinc-900 border-zinc-800 text-zinc-50 hover:bg-zinc-800/80 transition-colors">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-sm font-medium text-zinc-400">
             Last Alert
@@ -106,7 +107,7 @@ export function DashboardMetrics({ metrics }: DashboardMetricsProps) {
           </div>
           <p className="text-xs text-zinc-500 mt-1">Recent notification</p>
         </CardContent>
-      </Card>
+      </Card>}
     </div>
   );
 }
